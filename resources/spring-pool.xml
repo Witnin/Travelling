@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans default-lazy-init="true"
+    xmlns="http://www.springframework.org/schema/beans" 
+    xmlns:p="http://www.springframework.org/schema/p"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+    xmlns:context="http://www.springframework.org/schema/context"
+    xmlns:tx="http://www.springframework.org/schema/tx"
+    xmlns:mvc="http://www.springframework.org/schema/mvc"
+    xsi:schemaLocation="  
+       http://www.springframework.org/schema/beans   
+       http://www.springframework.org/schema/beans/spring-beans-4.3.xsd  
+       http://www.springframework.org/schema/mvc   
+       http://www.springframework.org/schema/mvc/spring-mvc-4.3.xsd   
+       http://www.springframework.org/schema/tx   
+       http://www.springframework.org/schema/tx/spring-tx-4.3.xsd   
+       http://www.springframework.org/schema/context  
+       http://www.springframework.org/schema/context/spring-context-4.3.xsd" >  
+
+   <!-- 加载jdbc.properties文件(一般加载多个文件时
+        可考虑使用此方式) -->
+   <bean id="propertyConfigurer" class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">
+		<property name="locations">
+			<list>
+				<value>classpath:jdbc.properties</value>
+			</list>
+		</property>
+   </bean>
+   <!-- 配置DRUID连接池(这个连接池的说明:
+   http://github.com 在搜索栏输入druid查找)
+   -->
+   <bean id="stat-filter" class="com.alibaba.druid.filter.stat.StatFilter"
+    lazy-init="true">
+        <description>状态过滤器</description>
+         <!-- 通过slowSqlMillis用来配置SQL慢的标准 -->
+        <property name="slowSqlMillis" value="3000" />
+         <!-- 以日志形式输出执行效率慢的SQL -->
+        <property name="logSlowSql" value="true" />
+        <!-- 通过mergeSql属性，合并SQL -->
+        <property name="mergeSql" value="true" />
+   </bean>
+  
+   <!--配置DruidDataSource连接池 -->
+   <bean id="dataSource" class="com.alibaba.druid.pool.DruidDataSource"
+		destroy-method="close" init-method="init" lazy-init="true">
+		<property name="driverClassName" value="${jdbc.driver}" />
+		<property name="url" value="${jdbc.url}" />
+		<property name="username" value="${jdbc.username}" />
+		<property name="password" value="${jdbc.password}" />
+		<!-- 初始化连接大小 -->
+		<property name="initialSize" value="${jdbc.initialSize}" />
+		<!-- 连接池最大数量 -->
+		<property name="maxActive" value="${jdbc.maxActive}" />
+		<!-- 连接池最小空闲 -->
+		<property name="minIdle" value="${jdbc.minIdle}" />
+		<!-- 获取连接最大等待时间 -->
+		<property name="maxWait" value="${jdbc.maxWait}" />
+		<!--配置了maxWait之后，缺省启用公平锁，并发效率会有所下降，如果需要可以通过配置useUnfairLock属性为true使用非公平锁。 -->
+		<property name="useUnfairLock" value="true" />
+		<property name="defaultReadOnly" value="false" />
+		
+		<!-- 通过配置StatFilter,打开监控台统计功能 -->
+		<property name="proxyFilters">
+			<list>
+				<ref bean="stat-filter" />
+			</list>
+		</property>
+		<property name="filters" value="${jdbc.druid.filters}" />
+		<!--<property name="connectionProperties" value="password=${username}"/>-->
+		<property name="testWhileIdle" value="true" />
+		<property name="testOnBorrow" value="false" />
+		<property name="testOnReturn" value="false" />
+		<property name="validationQuery" value="SELECT 1 from DUAL" />
+		<property name="timeBetweenLogStatsMillis" value="${jdbc.timeBetweenLogStatsMillis}" />
+     </bean>
+</beans>
